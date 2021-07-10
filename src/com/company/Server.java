@@ -11,15 +11,29 @@ public class Server {
         while(true) {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             serverSocket.receive(receivePacket);
-            String sentence = new String( receivePacket.getData());
-            System.out.println("RECEIVED: " + sentence);
+            DataInputStream din = new DataInputStream(new ByteArrayInputStream(receiveData));
+            System.out.println("- Packet Received From Client");
             InetAddress IPAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
-            String capitalizedSentence = sentence.toUpperCase();
-            sendData = capitalizedSentence.getBytes();
-            DatagramPacket sendPacket =
-                    new DatagramPacket(sendData, sendData.length, IPAddress, port);
+            sendData = handle(din);
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
             serverSocket.send(sendPacket);
+            System.out.println("- Packet Sent To Client");
         }
     }
+
+
+    public static byte[] createOfferMessage() throws IOException {
+        return null;
+    }
+    public static byte[] createAckMessage() throws IOException {
+        return null;
+    }
+    public static String setIp(){
+        return null;
+    }
+    public static byte[] handle(DataInputStream din){
+        return null;
+    }
+
 }
