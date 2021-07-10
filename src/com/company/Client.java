@@ -1,50 +1,74 @@
 package com.company;
 
-import java.io.*;
 import java.net.*;
 
 public class Client {
+
+    private static String ip;
+
     public static void main(String[] args) throws Exception {
 
+        int counter = 1;
+        long start;
+        long end;
 
         while(true) {
-
-            BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
             DatagramSocket clientSocket = new DatagramSocket();
             InetAddress IPAddress = InetAddress.getByName("localhost");
-            byte[] sendData = new byte[1024];
+            byte[] sendData;
             byte[] receiveData = new byte[1024];
 
-
-
-            String sentence = inFromUser.readLine();
-            sendData = sentence.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
-            clientSocket.send(sendPacket);
-            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            clientSocket.receive(receivePacket);
-            String modifiedSentence = new String(receivePacket.getData());
-            System.out.println("FROM SERVER:" + modifiedSentence);
+            while(true) {
+                while (true) {
+                    sendData = createDiscoveryMessage();
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
+                    clientSocket.send(sendPacket);
+                    start = System.currentTimeMillis();
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    clientSocket.receive(receivePacket);
+                    end = System.currentTimeMillis();
+                    if (timeForGetOffer(start, end) && getIP(receiveData) != null) {
+                        break;
+                    } else {
+                        counter += 1;
+                        updateTime(counter);
+                    }
+                }
+                sendData = createRequestMessage();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
+                clientSocket.send(sendPacket);
+                start = System.currentTimeMillis();
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                clientSocket.receive(receivePacket);
+                end = System.currentTimeMillis();
+                if (getAck(receiveData)) { // and time is ok
+                    break;
+                }
+            }
+            System.out.println("IP : "+ ip);
         }
-
-
     }
 
-    public byte[] createDiscoveryMessage(){
+    public static byte[] createDiscoveryMessage(){
         return null;
     }
-    public byte[] createRequestMessage(){
+    public static byte[] createRequestMessage(){
         return null;
     }
-    public String getIP(byte[] offer){
+    public static String getIP(byte[] offer){
+
         return null;
     }
-    public boolean timeForGetOffer(long start , long end){
-        return false;
-        // update time if false
-    }
-    public boolean getAck(byte[] offer){
+    public static boolean getAck(byte[] offer){
         return false;
     }
+    public static boolean timeForGetOffer(long start , long end){
+        // true if it's not expired
+        return false;
+    }
+    public static void updateTime(int counter){
+
+    }
+
 
 }
