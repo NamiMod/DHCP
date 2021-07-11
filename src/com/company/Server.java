@@ -2,14 +2,16 @@ package com.company;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
+import java.util.*;
+import org.json.simple.*;
+import org.json.simple.parser.*;
 
 public class Server {
 
-    private static int mode;
+    private static String mode;
     private static String start;
     private static String end;
-    private static int lease_time;
+    private static long lease_time;
     private static ArrayList<Server_Data> clients = new ArrayList();
 
     public static void main(String args[]) throws Exception {
@@ -106,7 +108,69 @@ public class Server {
         return null;
     }
     public static void setup(){
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(new FileReader("configs.json"));
+            JSONObject jsonObject = (JSONObject) obj;
 
+            String name = (String) jsonObject.get("pool_mode");
+            mode = name;
+
+            Map range = ((Map)jsonObject.get("range"));
+            // iterating address Map
+            Iterator<Map.Entry> itr1 = range.entrySet().iterator();
+            int counter = 0;
+            while (itr1.hasNext()) {
+                Map.Entry pair = itr1.next();
+                if (mode.equals("range")) {
+                    if (counter == 0) {
+                        start = (String) pair.getValue();
+                        counter++;
+                    }else {
+                        end = (String) pair.getValue();
+                    }
+
+                }
+            }
+
+            counter = 0;
+
+            Map subnet = ((Map)jsonObject.get("subnet"));
+            // iterating address Map
+            Iterator<Map.Entry> itr2 = subnet.entrySet().iterator();
+            while (itr2.hasNext()) {
+                Map.Entry pair = itr2.next();
+                if (mode.equals("subnet")) {
+                    if (counter == 0) {
+                        end = (String) pair.getValue();
+                        counter++;
+                    } else {
+                        start = (String) pair.getValue();
+                    }
+                }
+            }
+
+            Long lease = (Long) jsonObject.get("lease_time");
+            lease_time = lease;
+
+            Map reservation_list = ((Map)jsonObject.get("reservation_list"));
+            // iterating address Map
+            Iterator<Map.Entry> itr3 = reservation_list.entrySet().iterator();
+            while (itr3.hasNext()) {
+                Map.Entry pair = itr3.next();
+                clients.add(new Server_Data((String)pair.getKey(),(String)pair.getValue(),-1,0));
+            }
+
+            JSONArray black_list = (JSONArray) jsonObject.get("black_list");
+            Iterator iterator4 = black_list.iterator();
+            while (iterator4.hasNext()) {
+                clients.add(new Server_Data((String)iterator4.next(),"",-2,0));
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
