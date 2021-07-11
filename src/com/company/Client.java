@@ -117,7 +117,7 @@ public class Client {
         outStream.writeByte(0x00); // CHADDR 4
         outStream.writeByte(0x00); // CHADDR 4
         outStream.writeByte(0x00); // CHADDR 4
-        outStream.writeByte(0x02); // CHADDR 4
+        outStream.writeByte(0x00); // CHADDR 4
 
         outStream.writeByte(0x01); // OPTION
 
