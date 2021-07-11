@@ -2,9 +2,18 @@ package com.company;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Server {
+
+    private static int mode;
+    private static String start;
+    private static String end;
+    private static int lease_time;
+    private static ArrayList<Server_Data> clients = new ArrayList();
+
     public static void main(String args[]) throws Exception {
+        setup();
         DatagramSocket serverSocket = new DatagramSocket(9876);
         byte[] receiveData = new byte[1024];
         byte[] sendData = new byte[1024];
@@ -29,10 +38,6 @@ public class Server {
     public static byte[] createAckMessage(String mac , String ip) throws IOException {
         return null;
     }
-    public static String setIp(String mac){
-        return null;
-    }
-
     public static byte[] handle(DataInputStream din) throws IOException {
 
         byte[] message = new byte[1024];
@@ -96,6 +101,12 @@ public class Server {
             message = createAckMessage(mac , ip);
         }
         return message;
+    }
+    public static String setIp(String mac){
+        return null;
+    }
+    public static void setup(){
+
     }
 
 }
