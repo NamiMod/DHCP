@@ -67,7 +67,7 @@ public class Client {
         outStream.writeByte(0x06); // HLEN
 
         outStream.writeByte(0x00); // HOPS
-        //ToDo : random XID
+
         outStream.writeByte(0x01); // XID
         outStream.writeByte(0x02); // XID
         outStream.writeByte(0x03); // XID
@@ -123,6 +123,7 @@ public class Client {
 
         return out.toByteArray();
     }
+
     public static byte[] createRequestMessage() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream outStream = new DataOutputStream(out);
@@ -190,12 +191,15 @@ public class Client {
 
         return out.toByteArray();
     }
+
     public static String getIP(DataInputStream din){
         return null;
     }
+
     public static boolean getAck(DataInputStream din){
         return false;
     }
+
     public static boolean timeForGetOffer(long start , long end , int time){
         long temp = end - start ;
         if (temp < time*1000L){
@@ -203,6 +207,7 @@ public class Client {
         }
         return false;
     }
+
     public static int updateTime(int time){
         Random rand = new Random();
         int temp = (int)(time * 2 * rand.nextDouble());

@@ -30,19 +30,74 @@ public class Server {
             int port = receivePacket.getPort();
             sendData = handle(din);
             if (send == 1) {
-                //DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-                //serverSocket.send(sendPacket);
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+                serverSocket.send(sendPacket);
                 System.out.println("- Packet Sent To Client");
             }
         }
     }
 
-    public static byte[] createOfferMessage(String mac , String ip) throws IOException {
-        return null;
+    public static byte[] createOfferMessage(byte[] mac, String ip) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DataOutputStream outStream = new DataOutputStream(out);
+
+        outStream.writeByte(0x02); // op
+
+        outStream.writeByte(0x01); // HTYPE
+
+        outStream.writeByte(0x06); // HLEN
+
+        outStream.writeByte(0x00); // HOPS
+
+        outStream.writeByte(0x01); // XID
+        outStream.writeByte(0x02); // XID
+        outStream.writeByte(0x03); // XID
+        outStream.writeByte(0x04); // XID
+
+        outStream.writeByte(0x00); // SECS
+        outStream.writeByte(0x00); // SECS
+
+        outStream.writeByte(0x00); // FLAGS
+        outStream.writeByte(0x00); // FLAGS
+
+        outStream.writeByte(0x00); // CIADDR
+        outStream.writeByte(0x00); // CIADDR
+        outStream.writeByte(0x00); // CIADDR
+        outStream.writeByte(0x00); // CIADDR
+
+        String[] ip_parts = ip.split("\\.",4);
+        int[] numbers = new int[4];
+        for (int i = 0 ; i < 4 ; i++){
+            numbers[i] = Integer.parseInt(Integer.toHexString(Integer.parseInt(ip_parts[i])));
+        }
+
+        for (int i = 0 ; i < 4 ; i++){
+            outStream.writeByte(numbers[i]); // YIADDR // Client ip
+        }
+
+        outStream.writeByte(0x7F); // SIADDR
+        outStream.writeByte(0x00); // SIADDR
+        outStream.writeByte(0x00); // SIADDR
+        outStream.writeByte(0x01); // SIADDR
+
+        outStream.writeByte(0x00); // GIADDR
+        outStream.writeByte(0x00); // GIADDR
+        outStream.writeByte(0x00); // GIADDR
+        outStream.writeByte(0x00); // GIADDR
+
+        for(int i = 0 ; i<16;i++){
+            outStream.writeByte(mac[i]);
+        }
+
+        outStream.writeByte(0x02); // OPTION
+
+        return out.toByteArray();
     }
+
     public static byte[] createAckMessage(String mac , String ip) throws IOException {
         return null;
     }
+
     public static byte[] handle(DataInputStream din) throws IOException {
 
         byte[] message = new byte[1024];
@@ -88,9 +143,11 @@ public class Server {
 
         byte[] chaddr = new byte[16];
         String mac = "";
+        byte[] mac_byte = new byte[16];
         for (int i = 0 ; i < 16 ; i++){
             chaddr[i] = din.readByte();
             mac = mac + chaddr[i];
+            mac_byte[i]=chaddr[i];
         }
 
         byte option = din.readByte();
@@ -101,7 +158,7 @@ public class Server {
 
             if (option == 1) {
                 // discovery message
-                message = createOfferMessage(mac, ip);
+                message = createOfferMessage(mac_byte, ip);
 
             } else if (option == 3) {
                 // request message
@@ -110,6 +167,7 @@ public class Server {
         }
         return message;
     }
+
     public static void setup(){
         JSONParser parser = new JSONParser();
         try {
@@ -180,12 +238,6 @@ public class Server {
 
         update_ip();
 
-        System.out.println("******");
-        for (int i = 0 ;i < clients.size();i++){
-            System.out.println(clients.get(i).getIp());
-        }
-        System.out.println("******");
-
         String ip = start;
         if (mode.equals("subnet")) {
             ip = ip_plus(ip);
@@ -217,11 +269,8 @@ public class Server {
         if (ip_bigger(ip)){
             send = 0;
         }else{
-            System.out.println("111111");
             clients.add(new Server_Data(mac,ip,lease_time, System.currentTimeMillis()));
         }
-        System.out.println("salam");
-        System.out.println("ip : "+ip);
         return ip;
     }
 
