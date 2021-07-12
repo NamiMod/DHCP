@@ -3,8 +3,8 @@ package com.company;
 import java.io.*;
 import java.net.*;
 import java.util.Random;
-// normal client
-public class Client {
+// reserved client
+public class Client4 {
     private static int TimeOut = 10; // 10s
     private static int initial_interval = 10; // 10s
     private static int backoff_cutoff = 120; // 120s
@@ -116,7 +116,7 @@ public class Client {
         outStream.writeInt(0x00); // CHADDR 3
         outStream.writeInt(0x00); // CHADDR 4
         outStream.writeInt(0x00); // CHADDR 5
-        outStream.writeInt(0x01); // CHADDR 6
+        outStream.writeInt(0x04); // CHADDR 6
 
         outStream.writeByte(0x01); // OPTION
 
@@ -171,7 +171,7 @@ public class Client {
         outStream.writeInt(0x00); // CHADDR 3
         outStream.writeInt(0x00); // CHADDR 4
         outStream.writeInt(0x00); // CHADDR 5
-        outStream.writeInt(0x01); // CHADDR 6
+        outStream.writeInt(0x04); // CHADDR 6
 
         outStream.writeByte(0x03); // OPTION
 

@@ -14,14 +14,13 @@ public class Server {
     private static long lease_time;
     private static ArrayList<Server_Data> clients = new ArrayList();
 
-    private static int send = 1;
-
     public static void main(String args[]) throws Exception {
         setup();
+        System.out.println("setup completed");
         DatagramSocket serverSocket = new DatagramSocket(9876);
         byte[] receiveData = new byte[1024];
         byte[] sendData = new byte[1024];
-        while(true) {
+        while (true) {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             serverSocket.receive(receivePacket);
             DataInputStream din = new DataInputStream(new ByteArrayInputStream(receiveData));
@@ -29,15 +28,71 @@ public class Server {
             InetAddress IPAddress = receivePacket.getAddress();
             int port = receivePacket.getPort();
             sendData = handle(din);
-            if (send == 1) {
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-                serverSocket.send(sendPacket);
-                System.out.println("- Packet Sent To Client");
-            }
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+            serverSocket.send(sendPacket);
+            System.out.println("- Packet Sent To Client");
+
         }
     }
 
-    public static byte[] createOfferMessage(byte[] mac, String ip) throws IOException {
+    public static byte[] createOfferMessage(int[] mac, String ip) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DataOutputStream outStream = new DataOutputStream(out);
+
+        outStream.writeByte(0x02); // op
+
+        outStream.writeByte(0x01); // HTYPE
+
+        outStream.writeByte(0x06); // HLEN
+
+        outStream.writeByte(0x00); // HOPS
+
+        outStream.writeByte(0x01); // XID
+        outStream.writeByte(0x02); // XID
+        outStream.writeByte(0x03); // XID
+        outStream.writeByte(0x04); // XID
+
+        outStream.writeByte(0x00); // SECS
+        outStream.writeByte(0x00); // SECS
+
+        outStream.writeByte(0x00); // FLAGS
+        outStream.writeByte(0x00); // FLAGS
+
+        outStream.writeByte(0x00); // CIADDR
+        outStream.writeByte(0x00); // CIADDR
+        outStream.writeByte(0x00); // CIADDR
+        outStream.writeByte(0x00); // CIADDR
+
+        String[] ip_parts = ip.split("\\.",4);
+        int[] numbers = new int[4];
+        for (int i = 0 ; i < 4 ; i++){
+            numbers[i] = Integer.parseInt(ip_parts[i]);
+        }
+
+        for (int i = 0 ; i < 4 ; i++){
+            outStream.writeInt(numbers[i]); // YIADDR // Client ip
+        }
+
+        outStream.writeByte(0x7F); // SIADDR
+        outStream.writeByte(0x00); // SIADDR
+        outStream.writeByte(0x00); // SIADDR
+        outStream.writeByte(0x01); // SIADDR
+
+        outStream.writeByte(0x00); // GIADDR
+        outStream.writeByte(0x00); // GIADDR
+        outStream.writeByte(0x00); // GIADDR
+        outStream.writeByte(0x00); // GIADDR
+
+        for(int i = 0 ; i<6;i++){
+            outStream.writeInt(mac[i]);
+        }
+
+        outStream.writeByte(0x02); // OPTION
+
+        return out.toByteArray();
+    }
+
+    public static byte[] createAckMessage(int[] mac , String ip) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream outStream = new DataOutputStream(out);
 
@@ -86,17 +141,13 @@ public class Server {
         outStream.writeByte(0x00); // GIADDR
         outStream.writeByte(0x00); // GIADDR
 
-        for(int i = 0 ; i<16;i++){
-            outStream.writeByte(mac[i]);
+        for(int i = 0 ; i<6;i++){
+            outStream.writeInt(mac[i]);
         }
 
-        outStream.writeByte(0x02); // OPTION
+        outStream.writeByte(0x05); // OPTION
 
         return out.toByteArray();
-    }
-
-    public static byte[] createAckMessage(String mac , String ip) throws IOException {
-        return null;
     }
 
     public static byte[] handle(DataInputStream din) throws IOException {
@@ -142,30 +193,35 @@ public class Server {
         byte giaddr3 = din.readByte();
         byte giaddr4 = din.readByte();
 
-        byte[] chaddr = new byte[16];
+        int[] chaddr = new int[6];
         String mac = "";
-        byte[] mac_byte = new byte[16];
-        for (int i = 0 ; i < 16 ; i++){
-            chaddr[i] = din.readByte();
-            mac = mac + chaddr[i];
-            mac_byte[i]=chaddr[i];
+        int[] mac_byte = new int[6];
+        for (int i = 0; i < 6; i++) {
+            chaddr[i] = din.readInt();
+            if (i != 0 ) {
+                mac = mac + ":" +chaddr[i];
+            }else {
+                mac = mac + chaddr[i];
+            }
+            mac_byte[i] = chaddr[i];
         }
 
         byte option = din.readByte();
+        System.out.println("mac : "+mac);
         String ip = setIp(mac);
 
-        if (send == 1) {
 
+        if (option == 1) {
+            // discovery message
+            System.out.println("offer message");
+            message = createOfferMessage(mac_byte, ip);
 
-            if (option == 1) {
-                // discovery message
-                message = createOfferMessage(mac_byte, ip);
-
-            } else if (option == 3) {
-                // request message
-                message = createAckMessage(mac, ip);
-            }
+        } else if (option == 3) {
+            // request message
+            System.out.println("request message");
+            message = createAckMessage(mac_byte, ip);
         }
+
         return message;
     }
 
@@ -246,8 +302,12 @@ public class Server {
 
         for (int i = 0 ; i < clients.size() ; i++){
 
-            if (clients.get(i).getLease_time() == -2){
-                send = 0;
+            if (mac.equals(clients.get(i).getMac()) && clients.get(i).getLease_time() == -1){
+                return clients.get(i).getIp();
+            }
+
+            if (clients.get(i).getLease_time() == -2 && clients.get(i).getMac().equals(mac)){
+                return "0.0.0.0";
             }
             if (clients.get(i).getMac().equals(mac)){
 
@@ -261,17 +321,23 @@ public class Server {
 
             }
         }
-        send = 1;
-
         while (!is_ip_ok(ip)){
             ip = ip_plus(ip);
         }
 
         if (ip_bigger(ip)){
-            send = 0;
+            return "0.0.0.0";
         }else{
             clients.add(new Server_Data(mac,ip,lease_time, System.currentTimeMillis()));
         }
+        System.out.println("******************************");
+        System.out.println("Clients :");
+        for (int i = 0 ; i < clients.size() ; i++){
+            if (clients.get(i).getLease_time() != -2) {
+                System.out.println(clients.get(i).getMac() + " : " + clients.get(i).getIp() + " *** Time to expire(in ms) : "+ (clients.get(i).getLease_time()*1000 - System.currentTimeMillis() + clients.get(i).getStart()));
+            }
+        }
+        System.out.println("******************************");
         return ip;
     }
 
@@ -345,7 +411,5 @@ public class Server {
         }
 
     }
-
-
 
 }
