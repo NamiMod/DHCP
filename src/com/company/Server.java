@@ -68,11 +68,12 @@ public class Server {
         String[] ip_parts = ip.split("\\.",4);
         int[] numbers = new int[4];
         for (int i = 0 ; i < 4 ; i++){
-            numbers[i] = Integer.parseInt(Integer.toHexString(Integer.parseInt(ip_parts[i])));
+            numbers[i] = Integer.parseInt(ip_parts[i]);
+            System.out.println(numbers[i]);
         }
 
         for (int i = 0 ; i < 4 ; i++){
-            outStream.writeByte(numbers[i]); // YIADDR // Client ip
+            outStream.writeInt(numbers[i]); // YIADDR // Client ip
         }
 
         outStream.writeByte(0x7F); // SIADDR

@@ -135,7 +135,7 @@ public class Client {
         outStream.writeByte(0x06); // HLEN
 
         outStream.writeByte(0x00); // HOPS
-        //ToDo : random XID
+
         outStream.writeByte(0x01); // XID
         outStream.writeByte(0x02); // XID
         outStream.writeByte(0x03); // XID
@@ -192,8 +192,64 @@ public class Client {
         return out.toByteArray();
     }
 
-    public static String getIP(DataInputStream din){
-        return null;
+    public static String getIP(DataInputStream din) throws IOException {
+
+        String ip = "";
+        byte[] message = new byte[1024];
+
+        byte op = din.readByte();
+
+        byte htype = din.readByte();
+
+        byte hlen = din.readByte();
+
+        byte hops = din.readByte();
+
+        byte xid1 = din.readByte();
+        byte xid2 = din.readByte();
+        byte xid3 = din.readByte();
+        byte xid4 = din.readByte();
+
+        byte secs1 = din.readByte();
+        byte secs2 = din.readByte();
+
+        byte flag1 = din.readByte();
+        byte flag2 = din.readByte();
+
+        byte ciaddr1 = din.readByte();
+        byte ciaddr2 = din.readByte();
+        byte ciaddr3 = din.readByte();
+        byte ciaddr4 = din.readByte();
+
+        int yiaddr1 = din.readInt();
+        int yiaddr2 = din.readInt();
+        int yiaddr3 = din.readInt();
+        int yiaddr4 = din.readInt();
+
+        byte siaddr1 = din.readByte();
+        byte siaddr2 = din.readByte();
+        byte siaddr3 = din.readByte();
+        byte siaddr4 = din.readByte();
+
+        byte giaddr1 = din.readByte();
+        byte giaddr2 = din.readByte();
+        byte giaddr3 = din.readByte();
+        byte giaddr4 = din.readByte();
+
+        byte[] chaddr = new byte[16];
+        String mac = "";
+        byte[] mac_byte = new byte[16];
+        for (int i = 0 ; i < 16 ; i++){
+            chaddr[i] = din.readByte();
+            mac = mac + chaddr[i];
+            mac_byte[i]=chaddr[i];
+        }
+
+        byte option = din.readByte();
+
+        ip = yiaddr1+"."+yiaddr2+"."+yiaddr3+"."+yiaddr4;
+        return ip;
+
     }
 
     public static boolean getAck(DataInputStream din){
