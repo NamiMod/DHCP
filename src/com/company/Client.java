@@ -1,13 +1,37 @@
 package com.company;
 
+/**
+ * Client Class
+ *
+ *
+ * ##
+ * this is normal client
+ * ##
+ *
+ *
+ * in this class we create discovery and request message
+ *
+ *
+ * networks project
+ * simple DHCP Client - Server
+ * @author Seyed Nami Modarressi
+ * @since Summer 2021
+ */
+
 import java.io.*;
 import java.net.*;
 import java.util.Random;
-// normal client
+
 public class Client {
+
     private static int TimeOut = 10; // 10s
     private static int initial_interval = 10; // 10s
     private static int backoff_cutoff = 120; // 120s
+
+    /**
+     * main method for clients
+     * @throws Exception cant send or received packets
+     */
     public static void main(String[] args) throws Exception {
 
         long start;
@@ -34,7 +58,6 @@ public class Client {
                 end = System.currentTimeMillis();
                 if (timeForGetOffer(start, end, time)) {
                     ip = getIP(din);
-                    System.out.println(ip);
                     if (ip != null) {
                         System.out.println("we get ip in time :)");
                         break;
@@ -61,13 +84,18 @@ public class Client {
                 System.out.println("Ack");
                 break;
             }
-            System.out.println("Ack didn't get");
+            System.out.println("NAck");
         }
         if (!ip.equals("0.0.0.0")) {
             System.out.println("IP : " + ip);
         }
     }
 
+    /**
+     * create discovery message
+     * @return message
+     * @throws IOException cant create message
+     */
     public static byte[] createDiscoveryMessage() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream outStream = new DataOutputStream(out);
@@ -123,6 +151,12 @@ public class Client {
         return out.toByteArray();
     }
 
+    /**
+     * create request message
+     * @param ip client ip (comes from server)
+     * @return message
+     * @throws IOException cant create message
+     */
     public static byte[] createRequestMessage(String ip) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream outStream = new DataOutputStream(out);
@@ -145,6 +179,12 @@ public class Client {
 
         outStream.writeByte(0x00); // FLAGS
         outStream.writeByte(0x00); // FLAGS
+
+        String[] ip_parts = ip.split("\\.", 4);
+        int[] numbers = new int[4];
+        for (int i = 0; i < 4; i++) {
+            numbers[i] = Integer.parseInt(ip_parts[i]);
+        }
 
         outStream.writeByte(0x00); // CIADDR
         outStream.writeByte(0x00); // CIADDR
@@ -178,6 +218,12 @@ public class Client {
         return out.toByteArray();
     }
 
+    /**
+     * get ip from offer message
+     * @param din offer
+     * @return ip
+     * @throws IOException cant read packet
+     */
     public static String getIP(DataInputStream din) throws IOException {
 
         String ip = "";
@@ -234,6 +280,12 @@ public class Client {
 
     }
 
+    /**
+     * get ack from ack message
+     * @param din packet
+     * @return ack
+     * @throws IOException cant read packet
+     */
     public static boolean getAck(DataInputStream din) throws IOException {
         String ip = "";
         byte[] message = new byte[1024];
@@ -285,8 +337,6 @@ public class Client {
 
         int option = din.readByte();
 
-        System.out.println("option : "+option);
-
         if (option == 5){
             return true;
         }
@@ -295,6 +345,13 @@ public class Client {
 
     }
 
+    /**
+     * check the period
+     * @param start start time
+     * @param end received time
+     * @param time period
+     * @return in or out of period
+     */
     public static boolean timeForGetOffer(long start , long end , int time){
         long temp = end - start ;
         if (temp < time*1000L){
@@ -303,6 +360,11 @@ public class Client {
         return false;
     }
 
+    /**
+     * update period
+     * @param time last period
+     * @return new period
+     */
     public static int updateTime(int time){
         Random rand = new Random();
         int temp = (int)(time * 2 * rand.nextDouble());

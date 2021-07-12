@@ -1,5 +1,21 @@
 package com.company;
 
+/**
+ * Server Class
+ *
+ *
+ *
+ *
+ * in this class we create offer and ack message and set ip to clients
+ * server configs : configs.json
+ *
+ *
+ * networks project
+ * simple DHCP Client - Server
+ * @author Seyed Nami Modarressi
+ * @since Summer 2021
+ */
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -14,6 +30,10 @@ public class Server {
     private static long lease_time;
     private static ArrayList<Server_Data> clients = new ArrayList();
 
+    /**
+     * main method of server
+     * @throws Exception cant send or received message
+     */
     public static void main(String args[]) throws Exception {
         setup();
         System.out.println("setup completed");
@@ -35,6 +55,13 @@ public class Server {
         }
     }
 
+    /**
+     * create offer message for client
+     * @param mac client mac
+     * @param ip client ip
+     * @return message
+     * @throws IOException cant create message
+     */
     public static byte[] createOfferMessage(int[] mac, String ip) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream outStream = new DataOutputStream(out);
@@ -63,13 +90,13 @@ public class Server {
         outStream.writeByte(0x00); // CIADDR
         outStream.writeByte(0x00); // CIADDR
 
-        String[] ip_parts = ip.split("\\.",4);
+        String[] ip_parts = ip.split("\\.", 4);
         int[] numbers = new int[4];
-        for (int i = 0 ; i < 4 ; i++){
+        for (int i = 0; i < 4; i++) {
             numbers[i] = Integer.parseInt(ip_parts[i]);
         }
 
-        for (int i = 0 ; i < 4 ; i++){
+        for (int i = 0; i < 4; i++) {
             outStream.writeInt(numbers[i]); // YIADDR // Client ip
         }
 
@@ -83,7 +110,7 @@ public class Server {
         outStream.writeByte(0x00); // GIADDR
         outStream.writeByte(0x00); // GIADDR
 
-        for(int i = 0 ; i<6;i++){
+        for (int i = 0; i < 6; i++) {
             outStream.writeInt(mac[i]);
         }
 
@@ -92,7 +119,14 @@ public class Server {
         return out.toByteArray();
     }
 
-    public static byte[] createAckMessage(int[] mac , String ip) throws IOException {
+    /**
+     * create ack message for client
+     * @param mac client mac
+     * @param ip client ip
+     * @return message
+     * @throws IOException cant create message
+     */
+    public static byte[] createAckMessage(int[] mac, String ip) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream outStream = new DataOutputStream(out);
 
@@ -120,14 +154,13 @@ public class Server {
         outStream.writeByte(0x00); // CIADDR
         outStream.writeByte(0x00); // CIADDR
 
-        String[] ip_parts = ip.split("\\.",4);
+        String[] ip_parts = ip.split("\\.", 4);
         int[] numbers = new int[4];
-        for (int i = 0 ; i < 4 ; i++){
+        for (int i = 0; i < 4; i++) {
             numbers[i] = Integer.parseInt(ip_parts[i]);
-            System.out.println(numbers[i]);
         }
 
-        for (int i = 0 ; i < 4 ; i++){
+        for (int i = 0; i < 4; i++) {
             outStream.writeInt(numbers[i]); // YIADDR // Client ip
         }
 
@@ -141,7 +174,7 @@ public class Server {
         outStream.writeByte(0x00); // GIADDR
         outStream.writeByte(0x00); // GIADDR
 
-        for(int i = 0 ; i<6;i++){
+        for (int i = 0; i < 6; i++) {
             outStream.writeInt(mac[i]);
         }
 
@@ -150,6 +183,12 @@ public class Server {
         return out.toByteArray();
     }
 
+    /**
+     * handle client message
+     * @param din received packet
+     * @return message
+     * @throws IOException cant read message
+     */
     public static byte[] handle(DataInputStream din) throws IOException {
 
         byte[] message = new byte[1024];
@@ -198,16 +237,15 @@ public class Server {
         int[] mac_byte = new int[6];
         for (int i = 0; i < 6; i++) {
             chaddr[i] = din.readInt();
-            if (i != 0 ) {
-                mac = mac + ":" +chaddr[i];
-            }else {
+            if (i != 0) {
+                mac = mac + ":" + chaddr[i];
+            } else {
                 mac = mac + chaddr[i];
             }
             mac_byte[i] = chaddr[i];
         }
 
         byte option = din.readByte();
-        System.out.println("mac : "+mac);
         String ip = setIp(mac);
 
 
@@ -225,7 +263,10 @@ public class Server {
         return message;
     }
 
-    public static void setup(){
+    /**
+     * setup server
+     */
+    public static void setup() {
         JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(new FileReader("configs.json"));
@@ -234,7 +275,7 @@ public class Server {
             String name = (String) jsonObject.get("pool_mode");
             mode = name;
 
-            Map range = ((Map)jsonObject.get("range"));
+            Map range = ((Map) jsonObject.get("range"));
             // iterating address Map
             Iterator<Map.Entry> itr1 = range.entrySet().iterator();
             int counter = 0;
@@ -244,7 +285,7 @@ public class Server {
                     if (counter == 0) {
                         start = (String) pair.getValue();
                         counter++;
-                    }else {
+                    } else {
                         end = (String) pair.getValue();
                     }
 
@@ -253,7 +294,7 @@ public class Server {
 
             counter = 0;
 
-            Map subnet = ((Map)jsonObject.get("subnet"));
+            Map subnet = ((Map) jsonObject.get("subnet"));
             // iterating address Map
             Iterator<Map.Entry> itr2 = subnet.entrySet().iterator();
             while (itr2.hasNext()) {
@@ -271,18 +312,18 @@ public class Server {
             Long lease = (Long) jsonObject.get("lease_time");
             lease_time = lease;
 
-            Map reservation_list = ((Map)jsonObject.get("reservation_list"));
+            Map reservation_list = ((Map) jsonObject.get("reservation_list"));
             // iterating address Map
             Iterator<Map.Entry> itr3 = reservation_list.entrySet().iterator();
             while (itr3.hasNext()) {
                 Map.Entry pair = itr3.next();
-                clients.add(new Server_Data((String)pair.getKey(),(String)pair.getValue(),-1,0));
+                clients.add(new Server_Data((String) pair.getKey(), (String) pair.getValue(), -1, 0));
             }
 
             JSONArray black_list = (JSONArray) jsonObject.get("black_list");
             Iterator iterator4 = black_list.iterator();
             while (iterator4.hasNext()) {
-                clients.add(new Server_Data((String)iterator4.next(),"",-2,0));
+                clients.add(new Server_Data((String) iterator4.next(), "", -2, 0));
             }
 
 
@@ -291,7 +332,12 @@ public class Server {
         }
     }
 
-    public static String setIp(String mac){
+    /**
+     * set ip to client
+     * @param mac mac of client
+     * @return ip
+     */
+    public static String setIp(String mac) {
 
         update_ip();
 
@@ -300,112 +346,137 @@ public class Server {
             ip = ip_plus(ip);
         }
 
-        for (int i = 0 ; i < clients.size() ; i++){
+        for (int i = 0; i < clients.size(); i++) {
 
-            if (mac.equals(clients.get(i).getMac()) && clients.get(i).getLease_time() == -1){
+            if (mac.equals(clients.get(i).getMac()) && clients.get(i).getLease_time() == -1) {
                 return clients.get(i).getIp();
             }
 
-            if (clients.get(i).getLease_time() == -2 && clients.get(i).getMac().equals(mac)){
+            if (clients.get(i).getLease_time() == -2 && clients.get(i).getMac().equals(mac)) {
                 return "0.0.0.0";
             }
-            if (clients.get(i).getMac().equals(mac)){
+            if (clients.get(i).getMac().equals(mac)) {
 
-                if(lease_time* 1000 > System.currentTimeMillis() - clients.get(i).getStart()){
+                if (lease_time * 1000 > System.currentTimeMillis() - clients.get(i).getStart()) {
                     clients.get(i).setStart(System.currentTimeMillis());
                     return clients.get(i).getIp();
-                }else{
+                } else {
                     clients.remove(i);
                     break;
                 }
 
             }
         }
-        while (!is_ip_ok(ip)){
+        while (!is_ip_ok(ip)) {
             ip = ip_plus(ip);
         }
 
-        if (ip_bigger(ip)){
+        if (ip_bigger(ip)) {
             return "0.0.0.0";
-        }else{
-            clients.add(new Server_Data(mac,ip,lease_time, System.currentTimeMillis()));
+        } else {
+            clients.add(new Server_Data(mac, ip, lease_time, System.currentTimeMillis()));
         }
         System.out.println("******************************");
         System.out.println("Clients :");
-        for (int i = 0 ; i < clients.size() ; i++){
-            if (clients.get(i).getLease_time() != -2) {
-                System.out.println(clients.get(i).getMac() + " : " + clients.get(i).getIp() + " *** Time to expire(in ms) : "+ (clients.get(i).getLease_time()*1000 - System.currentTimeMillis() + clients.get(i).getStart()));
+        for (int i = 0; i < clients.size(); i++) {
+            if (clients.get(i).getLease_time() == -2) {
+                System.out.println("Blocked : " + clients.get(i).getMac());
+            }
+            if (clients.get(i).getLease_time() == -1) {
+                System.out.println("Reserved : " + clients.get(i).getMac() + " - " + clients.get(i).getIp());
+            }
+
+            if (clients.get(i).getLease_time() != -2 && clients.get(i).getLease_time() != -1) {
+                System.out.println(clients.get(i).getMac() + " : " + clients.get(i).getIp() + " *** Time to expire(in ms) : " + (clients.get(i).getLease_time() * 1000 - System.currentTimeMillis() + clients.get(i).getStart()));
             }
         }
         System.out.println("******************************");
         return ip;
     }
 
-    public static boolean is_ip_ok(String ip){
-        for (int i = 0 ;i < clients.size() ; i++){
-            if (ip.equals(clients.get(i).getIp())){
+    /**
+     * check if the ip is ok or not
+     * @param ip client ip
+     * @return true or false
+     */
+    public static boolean is_ip_ok(String ip) {
+        for (int i = 0; i < clients.size(); i++) {
+            if (ip.equals(clients.get(i).getIp())) {
                 return false;
             }
         }
         return true;
     }
 
-    public static String ip_plus(String ip){
+    /**
+     * next ip
+     * @param ip last ip
+     * @return new ip
+     */
+    public static String ip_plus(String ip) {
 
-        String[] numbers = ip.split("\\.",4);
-        int[] int_numbers  = new int[4];
+        String[] numbers = ip.split("\\.", 4);
+        int[] int_numbers = new int[4];
         int_numbers[0] = Integer.parseInt(numbers[0]);
         int_numbers[1] = Integer.parseInt(numbers[1]);
         int_numbers[2] = Integer.parseInt(numbers[2]);
         int_numbers[3] = Integer.parseInt(numbers[3]);
         int_numbers[3]++;
-        if (int_numbers[3] == 1000){
+        if (int_numbers[3] == 1000) {
             int_numbers[3]--;
             int_numbers[2]++;
         }
-        if (int_numbers[2] == 1000){
+        if (int_numbers[2] == 1000) {
             int_numbers[2]--;
             int_numbers[1]++;
         }
-        if (int_numbers[1] == 1000){
+        if (int_numbers[1] == 1000) {
             int_numbers[1]--;
             int_numbers[0]++;
         }
-        if (int_numbers[0] == 1000){
+        if (int_numbers[0] == 1000) {
             int_numbers[0]--;
         }
 
-        return int_numbers[0]+"."+ int_numbers[1]+"."+int_numbers[2]+"."+int_numbers[3];
+        return int_numbers[0] + "." + int_numbers[1] + "." + int_numbers[2] + "." + int_numbers[3];
 
 
     }
 
-    public static boolean ip_bigger(String ip){
-        String[] numbers = ip.split("\\.",4);
-        String temp = numbers[0]+numbers[1]+numbers[2]+numbers[3];
+    /**
+     * check if the ip is bigger than max or not
+     * @param ip client ip
+     * @return true or false
+     */
+    public static boolean ip_bigger(String ip) {
+        String[] numbers = ip.split("\\.", 4);
+        String temp = numbers[0] + numbers[1] + numbers[2] + numbers[3];
 
-        String[] max = end.split("\\.",4);
-        String temp2 = max[0]+max[1]+max[2]+max[3];
+        String[] max = end.split("\\.", 4);
+        String temp2 = max[0] + max[1] + max[2] + max[3];
 
         long num1 = Long.parseLong(temp);
         long num2 = Long.parseLong(temp2);
 
-        if (num1 <= num2){
+        if (num1 <= num2) {
             return false;
         }
         return true;
 
     }
 
-    public static void update_ip(){
+    /**
+     * update clients
+     */
+    public static void update_ip() {
 
         long time = System.currentTimeMillis();
 
         ListIterator<Server_Data> iter = clients.listIterator();
-        while(iter.hasNext()){
+        while (iter.hasNext()) {
             Server_Data temp = iter.next();
-            if(time - temp.getStart() >= lease_time*1000 && temp.getLease_time() >= 0 ){
-                System.out.println("removed : "+temp.getIp());
+            if (time - temp.getStart() >= lease_time * 1000 && temp.getLease_time() >= 0) {
+                System.out.println("removed : " + temp.getMac() + " - " + temp.getIp());
                 iter.remove();
             }
         }
