@@ -7,10 +7,11 @@ public class Server_Data {
     private long lease_time; // -1 : reserved    -2 : blocked
     private long start;
 
-    public Server_Data(String mac , String ip , int lease_time , int start){
+    public Server_Data(String mac , String ip , long lease_time , long start){
         this.mac = mac;
         this.ip = ip;
         this.lease_time = lease_time;
+        this.start=start;
     }
 
     public String getMac() {
@@ -27,5 +28,13 @@ public class Server_Data {
 
     public long getStart() {
         return start;
+    }
+
+    public void setLease_time(long lease_time) {
+        this.lease_time = lease_time;
+    }
+
+    public void setStart(long start) {
+        this.start = start;
     }
 }
